@@ -100,10 +100,26 @@ def init_json() -> None:
 
 
 class Server(user_pb2_grpc.PingServicer):
+    @staticmethod
+    def get_user() -> str:
+        ip: str = get('READ_IP')
+        port: str = get('READ_PORT')
+        addr: str = f'{ip}:{port}'
+
+        log.info('Connecting to SQLREAD service at %s', addr)
+        channel = grpc.insecure_channel(addr)
+        stub = sql_read_pb2_grpc.SQLReadStub(channel)
+
+        response = stub.GetUser(sql_pb2.Ack(msg=True))
+        user: str = response.name
+
+        log.info('Got user %s', user)
+        return user
+
     def GetUser(self, request, context):
         log.info('Received request for username')
         # TODO - need to trigger sql read
-        name = 'its_me_sguzman'
+        name = Server.get_user()
 
         log.info('Sending user %s', name)
         return sql_pb2.User(name=name)
