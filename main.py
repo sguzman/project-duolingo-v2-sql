@@ -101,6 +101,19 @@ def init_json() -> None:
 
 class Server(user_pb2_grpc.PingServicer):
     @staticmethod
+    def send_users(users: List[str]) -> None:
+        ip: str = get('WRITE_IP')
+        port: str = get('WRITE_PORT')
+        addr: str = f'{ip}:{port}'
+
+        log.info('Connecting to SQLWRITE service at %s', addr)
+        channel = grpc.insecure_channel(addr)
+        stub = sql_write_pb2_grpc.SQLWriteStub(channel)
+
+        stub.WriteUsers(sql_write_pb2.Users(names=users))
+        log.info('Sending users %s for writing', users)
+
+    @staticmethod
     def get_user() -> str:
         ip: str = get('READ_IP')
         port: str = get('READ_PORT')
@@ -118,7 +131,6 @@ class Server(user_pb2_grpc.PingServicer):
 
     def GetUser(self, request, context):
         log.info('Received request for username')
-        # TODO - need to trigger sql read
         name = Server.get_user()
 
         log.info('Sending user %s', name)
@@ -128,6 +140,7 @@ class Server(user_pb2_grpc.PingServicer):
         users: List[str] = request.names
         log.info('Received request to write users:')
         log.info(users)
+        Server.send_users(users)
 
         return sql_pb2.Ack(msg=True)
 
