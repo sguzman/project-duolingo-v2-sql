@@ -31,8 +31,6 @@ log = None
 env = {}
 env_list: List[str] = [
     "PORT",
-    "USER_PORT",
-    "USER_IP",
     "WRITE_PORT",
     "WRITE_IP",
     "READ_PORT",
